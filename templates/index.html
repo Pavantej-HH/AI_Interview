@@ -1,0 +1,1151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Interview — Tara</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Segoe UI', system-ui, Arial; 
+      background: #1a1a1a; 
+      color: #fff; 
+      overflow: hidden;
+    }
+
+    /* Main Video Grid Layout (Zoom-style) */
+    .video-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: 100vh;
+      gap: 2px;
+      background: #000;
+    }
+
+    /* Individual Video Panels */
+    .video-panel {
+      position: relative;
+      background: #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* User Video (Left) */
+    #user-video-panel {
+      background: linear-gradient(135deg, #1a2332 0%, #2a3442 100%);
+    }
+
+    #user-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+
+    /* AI Panel (Right) - Tara */
+    #ai-video-panel {
+      background: linear-gradient(135deg, #1a2a3a 0%, #2a3a4a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    /* Tara Avatar */
+    .ai-avatar-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    .ai-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5a4 0%, #0d8c8b 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 120px;
+      box-shadow: 0 10px 40px rgba(14, 165, 164, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Voice Visualization Rings */
+    .voice-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 3px solid rgba(14, 165, 164, 0.4);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .voice-ring.active {
+      animation: voiceWave 1.5s ease-out infinite;
+    }
+
+    @keyframes voiceWave {
+      0% {
+        width: 300px;
+        height: 300px;
+        opacity: 0.8;
+      }
+      100% {
+        width: 450px;
+        height: 450px;
+        opacity: 0;
+      }
+    }
+
+    .voice-ring:nth-child(2) { animation-delay: 0.3s; }
+    .voice-ring:nth-child(3) { animation-delay: 0.6s; }
+
+    /* User Voice Visualization */
+    .user-voice-indicator {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .voice-bar {
+      width: 4px;
+      background: #0ea5a4;
+      border-radius: 2px;
+      transition: height 0.1s ease;
+    }
+
+    /* Name Labels */
+    .name-label {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .ai-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0ea5a4;
+      text-shadow: 0 2px 10px rgba(14, 165, 164, 0.5);
+    }
+
+    .ai-title {
+      font-size: 16px;
+      color: #8ac;
+      margin-top: 5px;
+    }
+
+    /* Status Indicator */
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 20px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4f4;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* Control Bar at Bottom */
+    .control-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(20, 20, 20, 0.95);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 100;
+    }
+
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.3s;
+      background: #3a3a3a;
+      color: #fff;
+    }
+
+    .control-btn:hover:not(:disabled) {
+      background: #4a4a4a;
+      transform: scale(1.1);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .control-btn.start-call {
+      background: #27ae60;
+      width: 60px;
+      height: 60px;
+    }
+
+    .control-btn.start-call:hover:not(:disabled) {
+      background: #229954;
+    }
+
+    /* Setup Modal */
+    .setup-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .setup-modal.hidden {
+      display: none;
+    }
+
+    .setup-content {
+      background: #2a2a2a;
+      padding: 40px;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .setup-content h2 {
+      color: #0ea5a4;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #8ac;
+      font-weight: 600;
+    }
+
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+    }
+
+    .setup-btn {
+      width: 100%;
+      padding: 15px;
+      border-radius: 8px;
+      border: none;
+      background: #0ea5a4;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .setup-btn:hover {
+      background: #0cc;
+      transform: translateY(-2px);
+    }
+
+    /* Report Modal */
+    .report-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 2000;
+      overflow: auto;
+    }
+
+    .report-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .report-content {
+      background: #2a2a2a;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 900px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .report-header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #0ea5a4;
+      padding-bottom: 20px;
+    }
+
+    .report-header h1 {
+      color: #0ea5a4;
+      margin: 0 0 10px 0;
+    }
+
+    .report-section {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 8px;
+    }
+
+    .report-section h3 {
+      color: #0ea5a4;
+      margin-top: 0;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+
+    .score-box {
+      display: inline-block;
+      background: #1a3a2a;
+      color: #8fa;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .qa-item {
+      background: #222;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 3px solid #0ea5a4;
+    }
+
+    .qa-question {
+      color: #0ea5a4;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .qa-answer {
+      color: #ccc;
+      margin-bottom: 8px;
+    }
+
+    .qa-eval {
+      color: #8fa;
+      font-size: 0.9rem;
+      margin-top: 8px;
+      padding: 8px;
+      background: #1a2a20;
+      border-radius: 4px;
+    }
+
+    .qa-score {
+      display: inline-block;
+      background: #2a4a3a;
+      color: #8fa;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+
+    .report-btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 5px;
+    }
+
+    .download-btn {
+      background: #3498db;
+      color: #fff;
+    }
+
+    .download-btn:hover {
+      background: #2980b9;
+    }
+
+    .close-report {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .close-report:hover {
+      background: #c0392b;
+    }
+
+    /* Transcript Overlay */
+    .transcript-overlay {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 80%;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 15px 25px;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .transcript-overlay.visible {
+      opacity: 1;
+    }
+
+    .ai-transcript-persistent {
+      bottom: 120px;
+      max-width: 70%;
+    }
+
+    .ai-transcript-persistent.visible {
+      opacity: 1;
+    }
+
+    .transcript-text {
+      font-size: 18px;
+      line-height: 1.4;
+      color: #fff;
+    }
+
+    .transcript-interim {
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    /* Voice Control Hint */
+    .voice-control-hint {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #8ac;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .voice-control-hint.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Setup Modal -->
+  <div class="setup-modal" id="setup-modal">
+    <div class="setup-content">
+      <h2>🎙️ AI Interview Setup</h2>
+      <div class="form-group">
+        <label>Resume / Background</label>
+        <textarea id="resume" placeholder="Paste your resume or background information here..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Job Description</label>
+        <textarea id="jd" placeholder="Paste the job description here..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Interview Type</label>
+        <select id="question_type">
+          <option value="technical">Technical Interview</option>
+          <option value="behavioral">Behavioral Interview</option>
+          <option value="system-design">System Design Interview</option>
+        </select>
+      </div>
+      <button class="setup-btn" onclick="startInterviewSetup()">Start Interview</button>
+    </div>
+  </div>
+
+  <!-- Main Video Container -->
+  <div class="video-container">
+    <!-- User Video Panel -->
+    <div class="video-panel" id="user-video-panel">
+      <video id="user-video" autoplay muted playsinline></video>
+      <div class="name-label">You</div>
+      
+      <!-- User Voice Visualization -->
+      <div class="user-voice-indicator" id="user-voice-indicator">
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+        <div class="voice-bar" style="height: 10px;"></div>
+      </div>
+
+      <!-- User Transcript -->
+      <div class="transcript-overlay" id="user-transcript">
+        <div class="transcript-text" id="user-transcript-text"></div>
+      </div>
+    </div>
+
+    <!-- AI Video Panel (Tara) -->
+    <div class="video-panel" id="ai-video-panel">
+      <div class="ai-avatar-container">
+        <!-- Voice Rings -->
+        <div class="voice-ring" id="ai-voice-ring-1"></div>
+        <div class="voice-ring" id="ai-voice-ring-2"></div>
+        <div class="voice-ring" id="ai-voice-ring-3"></div>
+        
+        <!-- Tara Avatar -->
+        <div class="ai-avatar">👩‍💼</div>
+      </div>
+      
+      <div style="text-align: center;">
+        <div class="ai-name">Tara</div>
+        <div class="ai-title">Senior Technical Interviewer</div>
+      </div>
+
+      <div class="status-indicator" id="status-indicator">
+        <div class="status-dot"></div>
+        <span id="status-text">Connected</span>
+      </div>
+
+      <!-- Voice Control Hint -->
+      <div class="voice-control-hint" id="voice-control-hint">
+        💡 Say "stop the interview" to end
+      </div>
+
+      <!-- AI Transcript - Persistent during speech -->
+      <div class="transcript-overlay ai-transcript-persistent" id="ai-transcript">
+        <div class="transcript-text" id="ai-transcript-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Bar -->
+  <div class="control-bar">
+    <button class="control-btn" id="btn-mute" title="Mute">🎤</button>
+    <button class="control-btn start-call" id="btn-start-interview" title="Start Interview">▶️</button>
+    <button class="control-btn" id="btn-camera" title="Toggle Camera">📹</button>
+  </div>
+
+  <!-- Report Modal -->
+  <div class="report-modal" id="report-modal">
+    <div class="report-content" id="report-content"></div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://localhost:5002", { transports: ["websocket"] });
+
+    // UI Elements
+    const setupModal = document.getElementById('setup-modal');
+    const userVideo = document.getElementById('user-video');
+    const statusText = document.getElementById('status-text');
+    const btnStartInterview = document.getElementById('btn-start-interview');
+    const btnMute = document.getElementById('btn-mute');
+    const btnCamera = document.getElementById('btn-camera');
+    const resumeEl = document.getElementById('resume');
+    const jdEl = document.getElementById('jd');
+    const qtypeEl = document.getElementById('question_type');
+    const reportModal = document.getElementById('report-modal');
+    const reportContent = document.getElementById('report-content');
+    const userTranscriptEl = document.getElementById('user-transcript');
+    const userTranscriptText = document.getElementById('user-transcript-text');
+    const aiTranscriptEl = document.getElementById('ai-transcript');
+    const aiTranscriptText = document.getElementById('ai-transcript-text');
+    const voiceControlHint = document.getElementById('voice-control-hint');
+    const aiVoiceRings = [
+      document.getElementById('ai-voice-ring-1'),
+      document.getElementById('ai-voice-ring-2'),
+      document.getElementById('ai-voice-ring-3')
+    ];
+    const userVoiceIndicator = document.getElementById('user-voice-indicator');
+
+    let audioContext, mediaStream, audioWorkletNode, sourceNode, analyserNode;
+    let isInterviewRunning = false;
+    let isAiSpeaking = false;
+    let isMuted = false;
+    let isCameraOn = true;
+    let currentInterimTranscript = "";
+    let currentFinalTranscript = "";
+    let userVoiceAnimationFrame;
+    let currentAiAudio = null;
+
+    // Initialize user camera
+    async function initUserCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        userVideo.srcObject = stream;
+      } catch (error) {
+        console.error('Camera error:', error);
+      }
+    }
+
+    // Toggle camera
+    btnCamera.onclick = () => {
+      if (userVideo.srcObject) {
+        const tracks = userVideo.srcObject.getVideoTracks();
+        tracks.forEach(track => {
+          track.enabled = !track.enabled;
+          isCameraOn = track.enabled;
+        });
+        btnCamera.textContent = isCameraOn ? '📹' : '📷';
+      }
+    };
+
+    // Toggle mute
+    btnMute.onclick = () => {
+      isMuted = !isMuted;
+      btnMute.textContent = isMuted ? '🔇' : '🎤';
+      btnMute.style.background = isMuted ? '#e74c3c' : '#3a3a3a';
+    };
+
+    // Update status
+    function updateStatus(text, color = '#4f4') {
+      statusText.textContent = text;
+      statusText.style.color = color;
+    }
+
+    // Show AI voice visualization
+    function showAiVoiceVisualization(show) {
+      aiVoiceRings.forEach(ring => {
+        if (show) {
+          ring.classList.add('active');
+        } else {
+          ring.classList.remove('active');
+        }
+      });
+    }
+
+    // Animate user voice bars
+    function animateUserVoiceBars(dataArray) {
+      const bars = userVoiceIndicator.querySelectorAll('.voice-bar');
+      bars.forEach((bar, index) => {
+        const value = dataArray[index * 8] || 0;
+        const height = Math.max(10, (value / 255) * 50);
+        bar.style.height = height + 'px';
+      });
+    }
+
+    // Start user voice visualization
+    function startUserVoiceVisualization() {
+      if (!analyserNode) return;
+      
+      const dataArray = new Uint8Array(analyserNode.frequencyBinCount);
+      
+      function animate() {
+        if (!isInterviewRunning || isMuted) {
+          const bars = userVoiceIndicator.querySelectorAll('.voice-bar');
+          bars.forEach(bar => bar.style.height = '10px');
+          return;
+        }
+        
+        analyserNode.getByteFrequencyData(dataArray);
+        animateUserVoiceBars(dataArray);
+        userVoiceAnimationFrame = requestAnimationFrame(animate);
+      }
+      
+      animate();
+    }
+
+    // Show transcript
+    function showTranscript(element, text, isInterim = false) {
+      const textEl = element.querySelector('.transcript-text');
+      textEl.textContent = text;
+      textEl.className = isInterim ? 'transcript-text transcript-interim' : 'transcript-text';
+      element.classList.add('visible');
+      
+      // Only auto-hide user transcripts, keep AI transcript visible during speech
+      if (!isInterim && !element.classList.contains('ai-transcript-persistent')) {
+        setTimeout(() => element.classList.remove('visible'), 3000);
+      }
+    }
+
+    // Hide AI transcript
+    function hideAiTranscript() {
+      aiTranscriptEl.classList.remove('visible');
+    }
+
+    // Show voice control hint
+    function showVoiceControlHint() {
+      voiceControlHint.classList.add('visible');
+      setTimeout(() => {
+        voiceControlHint.classList.remove('visible');
+      }, 10000); // Show for 10 seconds
+    }
+
+    // Socket events
+    socket.on('connect', () => {
+      console.log('✅ Connected');
+      updateStatus('Connected', '#4f4');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected');
+      updateStatus('Disconnected', '#f66');
+      if (isInterviewRunning) stopInterview();
+    });
+
+    socket.on('ai_message', (data) => {
+      console.log('🤖 AI message');
+      isAiSpeaking = true;
+      updateStatus('AI Speaking...', '#0ea5a4');
+      
+      // Show AI transcript and keep it visible during speech
+      showTranscript(aiTranscriptEl, data.text);
+      showAiVoiceVisualization(true);
+
+      if (data.audio) {
+        // Stop any currently playing audio
+        if (currentAiAudio) {
+          currentAiAudio.pause();
+          currentAiAudio = null;
+        }
+
+        currentAiAudio = new Audio("data:audio/wav;base64," + data.audio);
+        currentAiAudio.play();
+        currentAiAudio.onended = () => {
+          console.log('🔊 AI speech finished');
+          isAiSpeaking = false;
+          showAiVoiceVisualization(false);
+          currentAiAudio = null;
+          
+          // Hide AI transcript after speech completes
+          setTimeout(() => hideAiTranscript(), 2000);
+          
+          if (data.is_final) {
+            updateStatus('Generating report...', '#fa0');
+          } else {
+            socket.emit('ai_speech_ended');
+            if (isInterviewRunning) {
+              updateStatus('Listening...', '#4f4');
+            }
+          }
+        };
+      } else {
+        isAiSpeaking = false;
+        showAiVoiceVisualization(false);
+        setTimeout(() => hideAiTranscript(), 2000);
+        socket.emit('ai_speech_ended');
+        if (isInterviewRunning) {
+          updateStatus('Listening...', '#4f4');
+        }
+      }
+    });
+
+    socket.on('interview_complete', (data) => {
+      console.log('✅ Interview completed');
+      updateStatus('Interview Completed', '#0ea5a4');
+      
+      setTimeout(() => {
+        displayReport(data.report);
+      }, 1000);
+      
+      stopInterview();
+    });
+
+    socket.on('interim_transcript', (data) => {
+      currentInterimTranscript = data.text;
+      showTranscript(userTranscriptEl, currentFinalTranscript + currentInterimTranscript, true);
+    });
+
+    socket.on('final_transcript_part', (data) => {
+      currentFinalTranscript += data.text + " ";
+      showTranscript(userTranscriptEl, currentFinalTranscript, true);
+    });
+
+    socket.on('user_transcript', (data) => {
+      showTranscript(userTranscriptEl, data.text, false);
+      currentFinalTranscript = "";
+      currentInterimTranscript = "";
+    });
+
+    // Display report
+// Display report
+    function displayReport(report) {
+      console.log('📋 Displaying report:', report);
+      
+      // FIXED: Access nested properties correctly
+      const stats = report.interview_statistics || {};
+      const aiAnalysis = report.ai_analysis || {};
+      const candidateDetails = report.candidate_details || {};
+      
+      const timestamp = report.timestamp || new Date().toLocaleString();
+      const interviewer = report.interviewer || 'Tara (Senior Technical Interviewer)';
+      
+      // FIXED: Get values from correct nested objects
+      const totalQuestions = stats.total_questions || 0;
+      const overallScore = stats.overall_score || 0;
+      const recommendation = aiAnalysis.recommendation || 'No recommendation available';
+      const overallEvaluation = aiAnalysis.overall_evaluation || 'No evaluation available';
+      const keyStrengths = aiAnalysis.key_strengths || [];
+      const areasForImprovement = aiAnalysis.areas_for_improvement || [];
+      
+      const resumeSummary = candidateDetails.resume_summary || 'N/A';
+      const jobDescription = candidateDetails.job_description || 'N/A';
+      const interviewType = candidateDetails.interview_type || 'technical';
+      
+      const detailedQA = report.detailed_qa || [];
+      
+      const html = `
+        <div class="report-header">
+          <h1>📋 Interview Report</h1>
+          <p style="color:#888;">Generated on ${timestamp}</p>
+          <p style="color:#888; margin-top: 5px;">Interviewer: ${interviewer}</p>
+        </div>
+      
+        <div class="report-section">
+          <h3>📊 Overall Performance</h3>
+          <div class="score-box">Average Score: ${overallScore}/10</div>
+          <p style="margin-top:15px;"><strong>Total Questions Answered:</strong> ${totalQuestions}</p>
+          <p style="margin-top:10px;"><strong>Recommendation:</strong></p>
+          <p style="color:#8fa; font-size: 1.1rem; font-weight: 600;">${recommendation}</p>
+        </div>
+      
+        ${keyStrengths.length > 0 ? `
+        <div class="report-section">
+          <h3>💪 Key Strengths</h3>
+          <ul style="color:#8fa; line-height: 1.8; margin-left: 20px;">
+            ${keyStrengths.map(strength => `<li>${strength}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+      
+        ${areasForImprovement.length > 0 ? `
+        <div class="report-section">
+          <h3>📈 Areas for Improvement</h3>
+          <ul style="color:#fa8; line-height: 1.8; margin-left: 20px;">
+            ${areasForImprovement.map(area => `<li>${area}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+      
+        <div class="report-section">
+          <h3>💼 Candidate Details</h3>
+          <p><strong>Interview Type:</strong> ${interviewType}</p>
+          <p style="margin-top:10px;"><strong>Resume Summary:</strong></p>
+          <p style="color:#aaa; line-height: 1.6;">${resumeSummary}</p>
+          <p style="margin-top:15px;"><strong>Job Description:</strong></p>
+          <p style="color:#aaa; line-height: 1.6;">${jobDescription}</p>
+        </div>
+      
+        <div class="report-section">
+          <h3>📝 Overall Evaluation</h3>
+          <p style="line-height:1.8; font-size: 1.05rem;">${overallEvaluation}</p>
+        </div>
+      
+        <div class="report-section">
+          <h3>💬 Detailed Q&A Breakdown</h3>
+          ${detailedQA.length > 0 ? detailedQA.map((qa, index) => `
+            <div class="qa-item">
+              <div class="qa-question">Q${index + 1}: ${qa.question || 'No question recorded'}</div>
+              <div class="qa-answer"><strong>Your Answer:</strong> ${qa.answer || 'No answer recorded'}</div>
+              <div class="qa-eval">
+                <strong>Evaluation:</strong> ${qa.evaluation || 'No evaluation'}
+                <span class="qa-score">Score: ${qa.score || 0}/10</span>
+              </div>
+            </div>
+          `).join('') : '<p style="color:#888;">No Q&A data available</p>'}
+        </div>
+      
+        <div style="text-align:center; margin-top:20px;">
+          <button class="report-btn download-btn" onclick="downloadReport()">📥 Download Report (JSON)</button>
+          <button class="report-btn close-report" onclick="closeReport()">Close Report</button>
+        </div>
+      `;
+      
+      reportContent.innerHTML = html;
+      reportModal.classList.add('active');
+      window.currentReport = report;
+    }
+
+
+    function closeReport() {
+      reportModal.classList.remove('active');
+    }
+
+    function downloadReport() {
+      const dataStr = JSON.stringify(window.currentReport, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `interview_report_${Date.now()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Audio streaming setup
+    async function initAudioStreaming() {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: { ideal: 48000, min: 16000 },
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleSize: 16,
+            latency: 0,
+            suppressLocalAudioPlayback: true
+          }
+        });
+
+        audioContext = new AudioContext({ 
+          sampleRate: 48000,
+          latency: "interactive"
+        });
+        
+        sourceNode = audioContext.createMediaStreamSource(mediaStream);
+
+        analyserNode = audioContext.createAnalyser();
+        analyserNode.fftSize = 2048;
+        analyserNode.smoothingTimeConstant = 0.8;
+        sourceNode.connect(analyserNode);
+
+        const compressor = audioContext.createDynamicsCompressor();
+        compressor.threshold.value = -50;
+        compressor.knee.value = 40;
+        compressor.ratio.value = 12;
+        compressor.attack.value = 0;
+        compressor.release.value = 0.25;
+
+        const highPassFilter = audioContext.createBiquadFilter();
+        highPassFilter.type = 'highpass';
+        highPassFilter.frequency.value = 85;
+        highPassFilter.Q.value = 1.0;
+
+        const lowPassFilter = audioContext.createBiquadFilter();
+        lowPassFilter.type = 'lowpass';
+        lowPassFilter.frequency.value = 8000;
+        lowPassFilter.Q.value = 1.0;
+
+        sourceNode.connect(highPassFilter);
+        highPassFilter.connect(lowPassFilter);
+        lowPassFilter.connect(compressor);
+
+        const processorBlobURL = URL.createObjectURL(new Blob([`
+          class AudioProcessor extends AudioWorkletProcessor {
+            constructor() {
+              super();
+              this.sampleBuffer = [];
+              this.targetSampleRate = 16000;
+              this.sourceSampleRate = 48000;
+              this.downsampleRatio = this.sourceSampleRate / this.targetSampleRate;
+            }
+
+            process(inputs) {
+              const inputData = inputs[0][0];
+              if (!inputData) return true;
+
+              for (let i = 0; i < inputData.length; i += this.downsampleRatio) {
+                const sample = inputData[Math.floor(i)];
+                this.sampleBuffer.push(sample);
+              }
+
+              if (this.sampleBuffer.length >= 1600) {
+                const pcmData = new Int16Array(this.sampleBuffer.length);
+                
+                for (let i = 0; i < this.sampleBuffer.length; i++) {
+                  const s = Math.max(-1, Math.min(1, this.sampleBuffer[i]));
+                  pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                
+                this.port.postMessage(pcmData.buffer, [pcmData.buffer]);
+                this.sampleBuffer = [];
+              }
+              
+              return true;
+            }
+          }
+          registerProcessor('audio-processor', AudioProcessor);
+        `], { type: 'application/javascript' }));
+        
+        await audioContext.audioWorklet.addModule(processorBlobURL);
+        audioWorkletNode = new AudioWorkletNode(audioContext, 'audio-processor');
+
+        audioWorkletNode.port.onmessage = (event) => {
+          if (!isAiSpeaking && isInterviewRunning && !isMuted) {
+            const audioData = new Uint8Array(event.data);
+            
+            const samples = new Int16Array(event.data);
+            let sum = 0;
+            for (let i = 0; i < samples.length; i++) {
+              sum += samples[i] * samples[i];
+            }
+            const rms = Math.sqrt(sum / samples.length);
+            
+            if (rms > 100) {
+              let binary = '';
+              for (let i = 0; i < audioData.byteLength; i++) {
+                binary += String.fromCharCode(audioData[i]);
+              }
+              socket.emit('audio_chunk', { audio: btoa(binary) });
+            }
+          }
+        };
+
+        compressor.connect(audioWorkletNode);
+        
+        // Start user voice visualization
+        startUserVoiceVisualization();
+        
+        console.log('🎤 Audio streaming initialized');
+        return true;
+      } catch (error) {
+        console.error('❌ Audio init error:', error);
+        alert('Microphone access required. Please grant permission.');
+        return false;
+      }
+    }
+
+    // Start interview setup
+    async function startInterviewSetup() {
+      if (!resumeEl.value.trim() || !jdEl.value.trim()) {
+        alert("Please provide both resume and job description.");
+        return;
+      }
+
+      setupModal.classList.add('hidden');
+      
+      const audioReady = await initAudioStreaming();
+      if (!audioReady) {
+        setupModal.classList.remove('hidden');
+        return;
+      }
+
+      socket.emit('start_interview', {
+        resume: resumeEl.value,
+        jd: jdEl.value,
+        question_type: qtypeEl.value
+      });
+
+      isInterviewRunning = true;
+      btnStartInterview.disabled = true;
+      updateStatus('Waiting for AI...', '#fa0');
+      
+      // Show voice control hint after interview starts
+      setTimeout(() => showVoiceControlHint(), 3000);
+    }
+
+    // Start interview (from control bar)
+    btnStartInterview.onclick = () => {
+      setupModal.classList.remove('hidden');
+    };
+
+    // Stop interview
+    function stopInterview() {
+      if (!isInterviewRunning) return;
+      
+      if (currentAiAudio) {
+        currentAiAudio.pause();
+        currentAiAudio = null;
+      }
+      
+      if (audioContext) audioContext.close();
+      if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+      if (userVoiceAnimationFrame) cancelAnimationFrame(userVoiceAnimationFrame);
+
+      audioContext = null;
+      mediaStream = null;
+      audioWorkletNode = null;
+      sourceNode = null;
+      analyserNode = null;
+      
+      socket.emit('stop_interview');
+      isInterviewRunning = false;
+      isAiSpeaking = false;
+      btnStartInterview.disabled = false;
+      
+      updateStatus('Connected', '#4f4');
+      
+      // Reset voice bars and hide transcripts
+      const bars = userVoiceIndicator.querySelectorAll('.voice-bar');
+      bars.forEach(bar => bar.style.height = '10px');
+      hideAiTranscript();
+      userTranscriptEl.classList.remove('visible');
+      voiceControlHint.classList.remove('visible');
+    }
+
+    // Close report on background click
+    reportModal.onclick = (e) => {
+      if (e.target === reportModal) closeReport();
+    };
+
+    // Initialize camera on load
+    initUserCamera();
+  </script>
+</body>
+</html>
